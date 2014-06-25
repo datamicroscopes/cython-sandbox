@@ -3,3 +3,4 @@
 *.so
 *.pyc
 /out
+/microscopes/hodgepodge.cpp
