@@ -92,9 +92,7 @@ private:
 class row_major_dataview : public dataview {
 public:
   row_major_dataview(const uint8_t *data,
-                     size_t n, const std::vector<runtime_type_info> &types)
-    : dataview(n, types), data_(data), pos_() {}
-
+                     size_t n, const std::vector<runtime_type_info> &types);
   row_accessor get() const override;
   size_t index() const override;
   void next() override;
