@@ -16,7 +16,7 @@ public:
   virtual ~component() {}
   virtual void add_value(const row_accessor &value) = 0;
   virtual void remove_value(const row_accessor &value) = 0;
-  virtual float score_value(const hyperparam_t &hps, const row_accessor &value) const = 0;
+  virtual float score_value(const row_accessor &value) const = 0;
 
   // ugly hack for python
   static std::function<std::shared_ptr<component>(const hyperparam_t &)>
@@ -25,7 +25,12 @@ public:
 
 class beta_bernoulli : public component {
 public:
-  beta_bernoulli() : heads_(), tails_() {}
+
+  // XXX: assumes hps is stable memory
+  beta_bernoulli(const hyperparam_t &hps)
+    : alpha_(&hps.at("alpha")),
+      beta_(&hps.at("beta")),
+      heads_(), tails_() {}
 
   void
   add_value(const row_accessor &value) override
@@ -46,11 +51,10 @@ public:
   }
 
   float
-  score_value(const hyperparam_t &hps, const row_accessor &value) const override
+  score_value(const row_accessor &value) const override
   {
-    const float alpha = hps.at("alpha");
-    const float beta  = hps.at("beta");
-    return betaln(alpha + float(heads_), beta + float(tails_)) - betaln(alpha, beta);
+    return betaln(*alpha_ + float(heads_), *beta_ + float(tails_)) -
+           betaln(*alpha_, *beta_);
   }
 
 private:
@@ -60,6 +64,8 @@ private:
     return lgammaf(x) + lgammaf(y) - lgammaf(x + y);
   }
 
+  const float *alpha_;
+  const float *beta_;
   size_t heads_;
   size_t tails_;
 };

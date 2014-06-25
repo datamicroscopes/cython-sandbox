@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <numeric>
 #include <cmath>
+#include <iostream>
 
 struct gibbs {
 
@@ -69,6 +70,8 @@ struct gibbs {
       state.add_value(choice, view);
       if (choice == egid)
         egid = state.create_group();
+      std::cout << "finished datapoint " << view.index() << std::endl;
+      std::cout << "nempty groups " << state.emptygroups().size() << std::endl;
     }
   }
 

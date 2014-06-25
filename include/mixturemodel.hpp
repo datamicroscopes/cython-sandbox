@@ -134,7 +134,7 @@ public:
       float sum = logf(group.second.first ? float(group.second.first) : empty_group_alpha);
       acc.reset();
       for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
-        sum += group.second.second[i]->score_value(hyperparams_[i], acc);
+        sum += group.second.second[i]->score_value(acc);
       ret.first.push_back(group.first);
       ret.second.push_back(sum);
       count += group.second.first;
