@@ -2,7 +2,7 @@ O := out
 TOP := $(shell echo $${PWD-`pwd`})
 CXXFLAGS := -fPIC -g -Wall -std=c++0x -I$(TOP)/include
 
-SRCFILES := src/dataview.cpp src/type_helper.cpp src/component.cpp
+SRCFILES := src/dataview.cpp src/type_helper.cpp src/component.cpp src/kernel.cpp
 OBJFILES := $(patsubst src/%.cpp, $(O)/%.o, $(SRCFILES))
 
 UNAME_S := $(shell uname -s)

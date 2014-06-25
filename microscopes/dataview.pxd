@@ -11,4 +11,4 @@ cdef extern from "dataview.hpp":
         pass
 
     cdef cppclass row_major_dataview(dataview):
-        row_major_dataview(uint8_t *, size_t, vector[ti.runtime_type_info] &)
+        row_major_dataview(uint8_t *, size_t, vector[ti.runtime_type_info] &) except +

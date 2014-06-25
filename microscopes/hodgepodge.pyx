@@ -54,14 +54,14 @@ cdef hyperparam_t _get_c_hyperparam(hp):
 
 cdef class mixturemodel:
     cdef mixturemodel_state *_thisptr
-    def __cinit__(self, n, models, hps):
+    def __cinit__(self, n, clusterhp, models, hps):
         cdef vector[string] factories 
         cdef vector[hyperparam_t] hyperparams
         for m in models:
             factories.push_back(str(m))
         for hp in hps:
             hyperparams.push_back(_get_c_hyperparam(hp))
-        self._thisptr = new mixturemodel_state(n, factories, hyperparams)
+        self._thisptr = new mixturemodel_state(n, _get_c_hyperparam(clusterhp), factories, hyperparams)
     def __dealloc__(self):
         del self._thisptr
 

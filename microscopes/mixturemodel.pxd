@@ -5,4 +5,4 @@ from component cimport hyperparam_t
 
 cdef extern from "mixturemodel.hpp":
     cdef cppclass mixturemodel_state:
-        mixturemodel_state(size_t, vector[string] &, vector[hyperparam_t] &) except +
+        mixturemodel_state(size_t, hyperparam_t, vector[string] &, vector[hyperparam_t] &) except +
