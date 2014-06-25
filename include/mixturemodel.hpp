@@ -85,9 +85,10 @@ public:
     assert(it != groups_.end());
     it->second.first++;
     row_accessor acc = view.get();
-    assert(acc.nfeatures() == it->second.size());
+    assert(acc.nfeatures() == it->second.second.size());
     for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
       it->second.second[i]->add_value(acc);
+    assignments_[view.index()] = gid;
   }
 
   size_t
@@ -100,9 +101,10 @@ public:
     assert(it != groups_.end());
     it->second.first--;
     row_accessor acc = view.get();
-    assert(acc.nfeatures() == it->second.size());
+    assert(acc.nfeatures() == it->second.second.size());
     for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
       it->second.second[i]->remove_value(acc);
+    assignments_[view.index()] = -1;
     return gid;
   }
 
