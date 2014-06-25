@@ -11,13 +11,28 @@
 
 class mixturemodel_state {
 public:
+
+  // make construction from python easier!
+  mixturemodel_state(
+      size_t n,
+      const std::vector< std::string > &factories,
+      const std::vector< hyperparam_t > &hyperparams)
+    : gcount_(),
+      assignments_(n, -1),
+      hyperparams_(hyperparams)
+  {
+    assert(factories.size() == hyperparams.size());
+    for (const auto &name : factories)
+      factories_.emplace_back(component::metafactory(name));
+  }
+
   mixturemodel_state(
       size_t n,
       const std::vector<std::function<std::shared_ptr<component>(const hyperparam_t &)>> &factories,
       const std::vector<hyperparam_t> &hyperparams)
     : gcount_(),
       assignments_(n, -1),
-      factories_(factories)
+      factories_(factories),
       hyperparams_(hyperparams)
   {
     assert(factories.size() == hyperparams.size());
@@ -49,7 +64,7 @@ public:
       gdata.emplace_back( factories_[i](hyperparams_[i]) );
     const size_t gid = gcount_++;
     groups_[gid] = std::make_pair(0, std::move(gdata));
-    return gid
+    return gid;
   }
 
   void
@@ -68,11 +83,11 @@ public:
     assert(assignments_[view.index()] == -1);
     auto it = groups_.find(gid);
     assert(it != groups_.end());
-    it->first++;
+    it->second.first++;
     row_accessor acc = view.get();
     assert(acc.nfeatures() == it->second.size());
     for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
-      it->second[i].second->add_value(acc);
+      it->second.second[i]->add_value(acc);
   }
 
   size_t
@@ -83,11 +98,11 @@ public:
     const size_t gid = assignments_[view.index()];
     auto it = groups_.find(gid);
     assert(it != groups_.end());
-    it->first--;
+    it->second.first--;
     row_accessor acc = view.get();
     assert(acc.nfeatures() == it->second.size());
     for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
-      it->second[i].second->remove_value(acc);
+      it->second.second[i]->remove_value(acc);
     return gid;
   }
 
@@ -98,11 +113,11 @@ public:
     // XXX: missing the assignment model
     for (auto &group : groups_) {
       acc.reset();
-      float acc = 0.;
+      float sum = 0.;
       for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
-        acc += group.second[i].second->score_value(acc);
+        sum += group.second.second[i]->score_value(hyperparams_[i], acc);
       ret.first.push_back(group.first);
-      ret.second.push_back(acc);
+      ret.second.push_back(sum);
     }
     return ret;
   }

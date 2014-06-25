@@ -3,6 +3,9 @@
 #include "dataview.hpp"
 #include <cmath>
 #include <map>
+#include <functional>
+#include <memory>
+#include <string>
 
 // XXX: need to generalize a bag of floats
 typedef std::map<std::string, float> hyperparam_t;
@@ -14,6 +17,10 @@ public:
   virtual void add_value(const row_accessor &value) = 0;
   virtual void remove_value(const row_accessor &value) = 0;
   virtual float score_value(const hyperparam_t &hps, const row_accessor &value) const = 0;
+
+  // ugly hack for python
+  static std::function<std::shared_ptr<component>(const hyperparam_t &)>
+  metafactory(const std::string &name);
 };
 
 class beta_bernoulli : public component {
@@ -41,8 +48,8 @@ public:
   float
   score_value(const hyperparam_t &hps, const row_accessor &value) const override
   {
-    const float alpha = hps["alpha"];
-    const float beta  = hps["beta"];
+    const float alpha = hps.at("alpha");
+    const float beta  = hps.at("beta");
     return betaln(alpha + float(heads_), beta + float(tails_)) - betaln(alpha, beta);
   }
 

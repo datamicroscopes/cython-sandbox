@@ -17,7 +17,8 @@ struct gibbs {
       const size_t gid = state.remove_value(view);
       if (!state.groupsize(gid))
         state.remove_group(gid);
-      const auto scores = state.score_value(view.get());
+      row_accessor acc = view.get();
+      const auto scores = state.score_value(acc);
       // XXX: sample
       const auto choice = scores.first[0];
       state.add_value(choice, view);

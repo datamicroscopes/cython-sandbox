@@ -2,7 +2,7 @@ O := out
 TOP := $(shell echo $${PWD-`pwd`})
 CXXFLAGS := -fPIC -g -Wall -std=c++0x -I$(TOP)/include
 
-SRCFILES := src/dataview.cpp src/type_helper.cpp
+SRCFILES := src/dataview.cpp src/type_helper.cpp src/component.cpp
 OBJFILES := $(patsubst src/%.cpp, $(O)/%.o, $(SRCFILES))
 
 all: $(O)/libmicroscopes.so
