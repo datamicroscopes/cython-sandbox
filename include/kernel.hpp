@@ -2,6 +2,7 @@
 
 #include "dataview.hpp"
 #include "mixturemodel.hpp"
+#include "util.hpp"
 
 #include <vector>
 #include <random>
@@ -56,23 +57,41 @@ struct gibbs {
   assign(mixturemodel_state &state, dataview &view)
   {
     // ensure 1 empty group
-    // XXX: lazy
-    for (auto gid : state.emptygroups())
-      state.remove_group(gid);
-    size_t egid = state.create_group();
+    size_t egid = 0;
+    const size_t egsizeinit = state.emptygroups().size();
+    if (!egsizeinit)
+      egid = state.create_group();
+    else {
+      auto it = state.emptygroups().begin();
+      egid = *it++;
+      if (egsizeinit > 1) {
+        std::vector<size_t> egremove(it, state.emptygroups().end());
+        for (auto g : egremove)
+          state.remove_group(g);
+      }
+    }
+    //std::cout << "empty group: " << egid << std::endl;
     for (view.reset(); !view.end(); view.next()) {
       const size_t gid = state.remove_value(view);
-      if (!state.groupsize(gid))
+      //std::cout << "datapoint " << view.index() << " belongs to group " << gid << std::endl;
+      if (!state.groupsize(gid)) {
+        //std::cout << "  * remove from group " << gid << std::endl;
         state.remove_group(gid);
+      }
       row_accessor acc = view.get();
       auto scores = state.score_value(acc);
+      //std::cout << "  * scores: " << scores.second << std::endl;
       const auto choice = scores.first[sample_discrete_log(scores.second)];
+      //std::cout << "  * probs: " << scores.second << std::endl;
+      //std::cout << "  * add to group " << choice << std::endl;
       state.add_value(choice, view);
-      if (choice == egid)
+      if (choice == egid) {
         egid = state.create_group();
-      std::cout << "finished datapoint " << view.index() << std::endl;
-      std::cout << "nempty groups " << state.emptygroups().size() << std::endl;
+        //std::cout << "  * new empty group: " << egid << std::endl;
+      }
     }
+    std::cout << "ngroups created: " << state.groups_created() << std::endl;
+    std::cout << "ngroups removed: " << state.groups_removed() << std::endl;
   }
 
 };

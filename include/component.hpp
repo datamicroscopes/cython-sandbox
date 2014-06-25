@@ -32,30 +32,9 @@ public:
       beta_(&hps.at("beta")),
       heads_(), tails_() {}
 
-  void
-  add_value(const row_accessor &value) override
-  {
-    if (value.get<bool>())
-      heads_++;
-    else
-      tails_++;
-  }
-
-  void
-  remove_value(const row_accessor &value) override
-  {
-    if (value.get<bool>())
-      heads_--;
-    else
-      tails_--;
-  }
-
-  float
-  score_value(const row_accessor &value) const override
-  {
-    return betaln(*alpha_ + float(heads_), *beta_ + float(tails_)) -
-           betaln(*alpha_, *beta_);
-  }
+  void add_value(const row_accessor &value) override;
+  void remove_value(const row_accessor &value) override;
+  float score_value(const row_accessor &value) const override;
 
 private:
   static inline float
