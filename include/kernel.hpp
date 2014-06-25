@@ -3,6 +3,7 @@
 #include "dataview.hpp"
 #include "mixturemodel.hpp"
 #include "util.hpp"
+#include "macros.hpp"
 
 #include <vector>
 #include <random>
@@ -28,7 +29,7 @@ struct gibbs {
       s -= m;
     for (auto &s : scores)
       s = expf(s);
-    const float acc = std::accumulate(scores.begin(), scores.end(), 0);
+    const float acc = std::accumulate(scores.begin(), scores.end(), 0.);
     for (auto &s : scores)
       s /= acc;
   }
@@ -90,8 +91,28 @@ struct gibbs {
         //std::cout << "  * new empty group: " << egid << std::endl;
       }
     }
-    std::cout << "ngroups created: " << state.groups_created() << std::endl;
-    std::cout << "ngroups removed: " << state.groups_removed() << std::endl;
+    //std::cout << "currently " << state.ngroups() << std::endl;
+  }
+
+  static void
+  bootstrap(mixturemodel_state &state, dataview &view)
+  {
+    DCHECK(!state.ngroups(), "not a clean state");
+    view.reset();
+    state.add_value(state.create_group(), view);
+    size_t egid = state.create_group();
+    for (view.next(); !view.end(); view.next()) {
+      row_accessor acc = view.get();
+      auto scores = state.score_value(acc);
+      //std::cout << "  * scores: " << scores.second << std::endl;
+      const auto choice = scores.first[sample_discrete_log(scores.second)];
+      //std::cout << "  * probs: " << scores.second << std::endl;
+      //std::cout << "  * add to group " << choice << std::endl;
+      state.add_value(choice, view);
+      if (choice == egid)
+        egid = state.create_group();
+    }
+    //std::cout << "placed in " << state.ngroups() << std::endl;
   }
 
 };

@@ -61,6 +61,9 @@ public:
     return it->second.first;
   }
 
+  inline size_t ngroups() const { return groups_.size(); }
+  inline size_t nentities() const { return assignments_.size(); }
+
   size_t create_group();
   void remove_group(size_t gid);
 

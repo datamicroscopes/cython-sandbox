@@ -7,16 +7,6 @@
 #include <vector>
 #include <utility>
 
-struct util {
-  static void
-  stupid_bootstrap(mixturemodel_state &state, dataview &view)
-  {
-    size_t gid = state.create_group();
-    for (view.reset(); !view.end(); view.next())
-      state.add_value(gid, view);
-  }
-};
-
 // pretty printer for std::pair<A, B>
 template <typename A, typename B>
 static inline std::ostream &

@@ -6,7 +6,7 @@ from dataview cimport dataview, row_major_dataview
 from component cimport hyperparam_t
 from mixturemodel cimport mixturemodel_state
 from kernel cimport assign
-from util cimport stupid_bootstrap
+from kernel cimport bootstrap as _bootstrap
 
 cimport numpy as np
 cimport type_info as ti
@@ -66,7 +66,7 @@ cdef class mixturemodel:
         del self._thisptr
 
 def bootstrap(mixturemodel mm, abstract_dataview view):
-    stupid_bootstrap(mm._thisptr[0], view._thisptr[0])
+    _bootstrap(mm._thisptr[0], view._thisptr[0])
 
 def gibbs_assign(mixturemodel mm, abstract_dataview view):
     assign(mm._thisptr[0], view._thisptr[0])
