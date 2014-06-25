@@ -19,12 +19,15 @@ if clang:
         '-stdlib=libc++',
     ])
 
+from os.path import expanduser
+distributions_inc = expanduser("~/distributions/include")
+
 setup(
     cmdclass = {'build_ext': build_ext},
     ext_modules = [Extension("microscopes.hodgepodge",
                              sources=["microscopes/hodgepodge.pyx"],
                              libraries=["microscopes"],
                              language="c++",
-                             include_dirs=[numpy.get_include(), 'include', 'microscopes'],
+                             include_dirs=[numpy.get_include(), 'include', 'microscopes', distributions_inc],
                              extra_compile_args=extra_compile_args)],
 )

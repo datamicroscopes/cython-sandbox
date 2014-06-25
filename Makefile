@@ -1,7 +1,8 @@
 O := out
 TOP := $(shell echo $${PWD-`pwd`})
-#CXXFLAGS := -fPIC -g -Wall -std=c++0x -I$(TOP)/include
-CXXFLAGS := -fPIC -g -Wall -O3 -DNDEBUG -std=c++0x -I$(TOP)/include
+CXXFLAGS := -fPIC -g -Wall -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
+#CXXFLAGS := -fPIC -g -Wall -O3 -DNDEBUG -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
+LDFLAGS := -ldistributions_shared -L$(HOME)/distributions-bin/lib -Wl,-rpath,$(HOME)/distributions-bin/lib
 
 SRCFILES := src/dataview.cpp src/type_helper.cpp src/component.cpp src/kernel.cpp src/mixturemodel.cpp
 OBJFILES := $(patsubst src/%.cpp, $(O)/%.o, $(SRCFILES))
@@ -26,7 +27,7 @@ $(O)/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(O)/libmicroscopes.so: $(OBJFILES)
-	gcc -shared -o $(O)/libmicroscopes.so $(OBJFILES)
+	gcc -shared -o $(O)/libmicroscopes.so $(OBJFILES) $(LDFLAGS)
 
 $(O)/libmicroscopes.dylib: $(OBJFILES)
-	g++ -dynamiclib -o $(O)/libmicroscopes.dylib $(OBJFILES)
+	g++ -dynamiclib -o $(O)/libmicroscopes.dylib $(OBJFILES) $(LDFLAGS)

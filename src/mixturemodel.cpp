@@ -4,12 +4,12 @@
 using namespace std;
 
 size_t
-mixturemodel_state::create_group()
+mixturemodel_state::create_group(rng_t &rng)
 {
   vector<shared_ptr<component>> gdata;
   gdata.reserve(factories_.size());
   for (size_t i = 0; i < factories_.size(); i++)
-    gdata.emplace_back(factories_[i](hyperparams_[i]));
+    gdata.emplace_back(factories_[i](*hyperparams_[i], rng));
   const size_t gid = gcount_++;
   groups_[gid] = move(make_pair(0, move(gdata)));
   assert(!gempty_.count(gid));
@@ -30,7 +30,7 @@ mixturemodel_state::remove_group(size_t gid)
 }
 
 void
-mixturemodel_state::add_value(size_t gid, const dataview &view)
+mixturemodel_state::add_value(size_t gid, const dataview &view, rng_t &rng)
 {
   assert(view.size() == assignments_.size());
   assert(assignments_.at(view.index()) == -1);
@@ -45,12 +45,12 @@ mixturemodel_state::add_value(size_t gid, const dataview &view)
   row_accessor acc = view.get();
   assert(acc.nfeatures() == it->second.second.size());
   for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
-    it->second.second[i]->add_value(acc);
+    it->second.second[i]->add_value(*hyperparams_[i], acc, rng);
   assignments_[view.index()] = gid;
 }
 
 size_t
-mixturemodel_state::remove_value(const dataview &view)
+mixturemodel_state::remove_value(const dataview &view, rng_t &rng)
 {
   assert(view.size() == assignments_.size());
   assert(assignments_.at(view.index()) != -1);
@@ -63,13 +63,13 @@ mixturemodel_state::remove_value(const dataview &view)
   row_accessor acc = view.get();
   assert(acc.nfeatures() == it->second.second.size());
   for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
-    it->second.second[i]->remove_value(acc);
+    it->second.second[i]->remove_value(*hyperparams_[i], acc, rng);
   assignments_[view.index()] = -1;
   return gid;
 }
 
 pair<vector<size_t>, vector<float>>
-mixturemodel_state::score_value(row_accessor &acc) const
+mixturemodel_state::score_value(row_accessor &acc, rng_t &rng) const
 {
   pair<vector<size_t>, vector<float>> ret;
   const size_t n_empty_groups = gempty_.size();
@@ -80,7 +80,7 @@ mixturemodel_state::score_value(row_accessor &acc) const
     float sum = logf(group.second.first ? float(group.second.first) : empty_group_alpha);
     acc.reset();
     for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
-      sum += group.second.second[i]->score_value(acc);
+      sum += group.second.second[i]->score_value(*hyperparams_[i], acc, rng);
     ret.first.push_back(group.first);
     ret.second.push_back(sum);
     count += group.second.first;

@@ -15,7 +15,7 @@ if __name__ == '__main__':
     W = int(math.sqrt(D))
     assert W * W == D
     dtype = [('', bool)]*D
-    inds = np.random.permutation(np.arange(N))
+    inds = np.random.permutation(np.arange(N))[:300]
     Y = np.array([tuple(y) for y in Y[inds]], dtype=dtype)
 
     #inds = np.random.permutation(np.arange(N))[:2]
@@ -27,7 +27,8 @@ if __name__ == '__main__':
 
     view = numpy_dataview(Y)
     mm = mixturemodel(Y.shape[0], {'alpha':50.0}, ['beta_bernoulli']*D, [{'alpha':1., 'beta':1.}]*D)
-    bootstrap(mm, view)
+    rng = rng_t(543)
+    bootstrap(mm, view, rng)
     print 'training with dataset size', Y.shape[0], 'nfeatures', D
-    for i in xrange(30):
-        gibbs_assign(mm, view)
+    for i in xrange(2000):
+        gibbs_assign(mm, view, rng)

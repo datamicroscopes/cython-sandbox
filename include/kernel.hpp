@@ -14,8 +14,6 @@
 
 struct gibbs {
 
-  // XXX: BAD! NEED TO THREAD RANDOMNESS THROUGH THE PROGRAM
-  static std::default_random_engine Prng_;
   static std::uniform_real_distribution<float> Unif01_;
 
   // copy from:
@@ -35,17 +33,17 @@ struct gibbs {
   }
 
   static inline size_t
-  sample_discrete_log(std::vector<float> &scores)
+  sample_discrete_log(std::vector<float> &scores, rng_t &rng)
   {
     scores_to_probs(scores);
-    return sample_discrete(scores);
+    return sample_discrete(scores, rng);
   }
 
   static inline size_t
-  sample_discrete(const std::vector<float> &probs)
+  sample_discrete(const std::vector<float> &probs, rng_t &rng)
   {
     // assumes probs add up to 1
-    float dart = Unif01_(Prng_);
+    float dart = Unif01_(rng);
     for (size_t i = 0; i < probs.size(); i++) {
       dart -= probs[i];
       if (dart <= 0.)
@@ -55,13 +53,13 @@ struct gibbs {
   }
 
   static void
-  assign(mixturemodel_state &state, dataview &view)
+  assign(mixturemodel_state &state, dataview &view, rng_t &rng)
   {
     // ensure 1 empty group
     size_t egid = 0;
     const size_t egsizeinit = state.emptygroups().size();
     if (!egsizeinit)
-      egid = state.create_group();
+      egid = state.create_group(rng);
     else {
       auto it = state.emptygroups().begin();
       egid = *it++;
@@ -73,21 +71,21 @@ struct gibbs {
     }
     //std::cout << "empty group: " << egid << std::endl;
     for (view.reset(); !view.end(); view.next()) {
-      const size_t gid = state.remove_value(view);
+      const size_t gid = state.remove_value(view, rng);
       //std::cout << "datapoint " << view.index() << " belongs to group " << gid << std::endl;
       if (!state.groupsize(gid)) {
         //std::cout << "  * remove from group " << gid << std::endl;
         state.remove_group(gid);
       }
       row_accessor acc = view.get();
-      auto scores = state.score_value(acc);
+      auto scores = state.score_value(acc, rng);
       //std::cout << "  * scores: " << scores.second << std::endl;
-      const auto choice = scores.first[sample_discrete_log(scores.second)];
+      const auto choice = scores.first[sample_discrete_log(scores.second, rng)];
       //std::cout << "  * probs: " << scores.second << std::endl;
       //std::cout << "  * add to group " << choice << std::endl;
-      state.add_value(choice, view);
+      state.add_value(choice, view, rng);
       if (choice == egid) {
-        egid = state.create_group();
+        egid = state.create_group(rng);
         //std::cout << "  * new empty group: " << egid << std::endl;
       }
     }
@@ -95,22 +93,22 @@ struct gibbs {
   }
 
   static void
-  bootstrap(mixturemodel_state &state, dataview &view)
+  bootstrap(mixturemodel_state &state, dataview &view, rng_t &rng)
   {
     DCHECK(!state.ngroups(), "not a clean state");
     view.reset();
-    state.add_value(state.create_group(), view);
-    size_t egid = state.create_group();
+    state.add_value(state.create_group(rng), view, rng);
+    size_t egid = state.create_group(rng);
     for (view.next(); !view.end(); view.next()) {
       row_accessor acc = view.get();
-      auto scores = state.score_value(acc);
+      auto scores = state.score_value(acc, rng);
       //std::cout << "  * scores: " << scores.second << std::endl;
-      const auto choice = scores.first[sample_discrete_log(scores.second)];
+      const auto choice = scores.first[sample_discrete_log(scores.second, rng)];
       //std::cout << "  * probs: " << scores.second << std::endl;
       //std::cout << "  * add to group " << choice << std::endl;
-      state.add_value(choice, view);
+      state.add_value(choice, view, rng);
       if (choice == egid)
-        egid = state.create_group();
+        egid = state.create_group(rng);
     }
     //std::cout << "placed in " << state.ngroups() << std::endl;
   }

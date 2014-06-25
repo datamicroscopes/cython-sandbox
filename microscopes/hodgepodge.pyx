@@ -3,13 +3,21 @@ from libcpp.string cimport string
 from libc.stdint cimport uint8_t
 
 from dataview cimport dataview, row_major_dataview
-from component cimport hyperparam_t
+from component cimport hyperparam_bag_t
+from random_fwd cimport rng_t as _rng_t
 from mixturemodel cimport mixturemodel_state
 from kernel cimport assign
 from kernel cimport bootstrap as _bootstrap
 
 cimport numpy as np
 cimport type_info as ti
+
+cdef class rng_t:
+    cdef _rng_t *_thisptr
+    def __cinit__(self, seed=12345):
+        self._thisptr = new _rng_t(seed)
+    def __dealloc__(self):
+        del self._thisptr
 
 def _get_c_type(tpe):
     if tpe in (bool, np.bool):
@@ -46,8 +54,8 @@ cdef class numpy_dataview(abstract_dataview):
             ctypes.push_back(_get_c_type(npd.dtype[i]))
         self._thisptr = new row_major_dataview(<uint8_t *> npd.data, n, ctypes)
 
-cdef hyperparam_t _get_c_hyperparam(hp):
-    cdef hyperparam_t ret
+cdef hyperparam_bag_t _get_c_hyperparam(hp):
+    cdef hyperparam_bag_t ret
     for k, v in hp.iteritems():
         ret[k] = float(v)
     return ret
@@ -56,7 +64,7 @@ cdef class mixturemodel:
     cdef mixturemodel_state *_thisptr
     def __cinit__(self, n, clusterhp, models, hps):
         cdef vector[string] factories 
-        cdef vector[hyperparam_t] hyperparams
+        cdef vector[hyperparam_bag_t] hyperparams
         for m in models:
             factories.push_back(str(m))
         for hp in hps:
@@ -65,8 +73,8 @@ cdef class mixturemodel:
     def __dealloc__(self):
         del self._thisptr
 
-def bootstrap(mixturemodel mm, abstract_dataview view):
-    _bootstrap(mm._thisptr[0], view._thisptr[0])
+def bootstrap(mixturemodel mm, abstract_dataview view, rng_t rng):
+    _bootstrap(mm._thisptr[0], view._thisptr[0], rng._thisptr[0])
 
-def gibbs_assign(mixturemodel mm, abstract_dataview view):
-    assign(mm._thisptr[0], view._thisptr[0])
+def gibbs_assign(mixturemodel mm, abstract_dataview view, rng_t rng):
+    assign(mm._thisptr[0], view._thisptr[0], rng._thisptr[0])
