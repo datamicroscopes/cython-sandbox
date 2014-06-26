@@ -16,8 +16,11 @@ dataview::dataview(size_t n, const vector<runtime_type_info> &types)
 }
 
 row_major_dataview::row_major_dataview(
-    const uint8_t *data, size_t n, const vector<runtime_type_info> &types)
-    : dataview(n, types), data_(data), pos_()
+    const uint8_t *data,
+    const bool *mask,
+    size_t n,
+    const vector<runtime_type_info> &types)
+    : dataview(n, types), data_(data), mask_(mask), pos_()
 {
     //cout << "types:" << endl;
     //for (auto t : types)
@@ -32,7 +35,8 @@ row_accessor
 row_major_dataview::get() const
 {
   const uint8_t *cursor = data_ + rowsize() * pos_;
-  return row_accessor(cursor, &types(), &offsets());
+  const bool *mask_cursor = !mask_ ? nullptr : mask_ + types().size() * pos_;
+  return row_accessor(cursor, mask_cursor, &types(), &offsets());
 }
 
 size_t

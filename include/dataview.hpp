@@ -7,11 +7,13 @@
 
 class row_accessor {
 public:
-  row_accessor() : data_(), types_(), offsets_(), pos_() {}
+  row_accessor() : data_(), mask_(), types_(), offsets_(), pos_() {}
   row_accessor(const uint8_t *data,
+               const bool *mask,
                const std::vector<runtime_type_info> *types,
                const std::vector<size_t> *offsets)
-    : data_(data), types_(types), offsets_(offsets), cursor_(data), pos_()
+    : data_(data), mask_(mask), types_(types),
+      offsets_(offsets), cursor_(data), pos_()
   {
     assert(data);
     assert(types->size() == offsets->size());
@@ -19,6 +21,7 @@ public:
 
   inline size_t tell() const { return pos_; }
   inline size_t nfeatures() const { return types_->size(); }
+  inline bool ismasked() const { return !mask_ ? false : *(mask_ + pos_); }
 
   inline void
   seek(size_t pos)
@@ -54,6 +57,7 @@ public:
 
 private:
   const uint8_t *data_;
+  const bool *mask_; // XXX: use more space saving repr in future
   const std::vector<runtime_type_info> *types_;
   const std::vector<size_t> *offsets_;
 
@@ -66,6 +70,7 @@ protected:
   dataview(size_t n, const std::vector<runtime_type_info> &types);
 
   inline const std::vector<size_t> & offsets() const { return offsets_; }
+  // in bytes
   inline size_t rowsize() const { return rowsize_; }
 
 public:
@@ -92,6 +97,7 @@ private:
 class row_major_dataview : public dataview {
 public:
   row_major_dataview(const uint8_t *data,
+                     const bool *mask,
                      size_t n, const std::vector<runtime_type_info> &types);
   row_accessor get() const override;
   size_t index() const override;
@@ -101,5 +107,6 @@ public:
 
 private:
   const uint8_t *data_;
+  const bool *mask_;
   size_t pos_;
 };

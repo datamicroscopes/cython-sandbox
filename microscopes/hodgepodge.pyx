@@ -1,4 +1,5 @@
 from libcpp.vector cimport vector
+from libcpp cimport bool as _bool
 from libcpp.string cimport string
 from libc.stdint cimport uint8_t
 
@@ -47,13 +48,18 @@ cdef class abstract_dataview:
 cdef class numpy_dataview(abstract_dataview):
     cdef np.ndarray _npd
     def __cinit__(self, np.ndarray npd):
-        self._npd = npd # bump refcount
+        self._npd = np.ascontiguousarray(npd) # bump refcount
         n = npd.shape[0]
         cdef vector[ti.runtime_type_info] ctypes
         l = len(npd.dtype)
         for i in xrange(l):
             ctypes.push_back(_get_c_type(npd.dtype[i]))
-        self._thisptr = new row_major_dataview(<uint8_t *> npd.data, n, ctypes)
+        cdef np.ndarray npd_mask
+        if hasattr(npd, 'mask'):
+            npd_mask = np.ascontiguousarray(npd.mask)
+            self._thisptr = new row_major_dataview( <uint8_t *> npd.data, <_bool *> npd_mask.data, n, ctypes)
+        else:
+            self._thisptr = new row_major_dataview( <uint8_t *> npd.data, NULL, n, ctypes)
 
 cdef hyperparam_bag_t _get_c_hyperparam(hp):
     cdef hyperparam_bag_t ret
