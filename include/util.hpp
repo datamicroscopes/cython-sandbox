@@ -2,6 +2,7 @@
 
 #include "dataview.hpp"
 #include "mixturemodel.hpp"
+#include "random_fwd.hpp"
 
 #include <iostream>
 #include <vector>
@@ -32,3 +33,22 @@ operator<<(std::ostream &o, const std::vector<T, Alloc> &v)
   o << "]";
   return o;
 }
+
+struct util {
+
+  // generate a random permutation of the integers [0, ..., n-1]
+  static inline void
+  permute(std::vector<size_t> &pi, size_t n, rng_t &rng)
+  {
+    pi.clear();
+    pi.reserve(n);
+    for (size_t i = 0; i < n; i++)
+      pi.push_back(i);
+    for (size_t i = pi.size() - 1; i >= 1; i--) {
+      std::uniform_int_distribution<> dist(0, i);
+      const size_t j = dist(rng);
+      std::swap(pi[j], pi[i]);
+    }
+  }
+
+};

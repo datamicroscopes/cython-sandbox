@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "type_helper.hpp"
+#include "random_fwd.hpp"
 
 class row_accessor {
 public:
@@ -98,15 +99,21 @@ class row_major_dataview : public dataview {
 public:
   row_major_dataview(const uint8_t *data,
                      const bool *mask,
-                     size_t n, const std::vector<runtime_type_info> &types);
+                     size_t n,
+                     const std::vector<runtime_type_info> &types);
   row_accessor get() const override;
   size_t index() const override;
   void next() override;
   void reset() override;
   bool end() const override;
 
+  inline void reset_permutation() { pi_.clear(); }
+  void permute(rng_t &rng);
+
 private:
   const uint8_t *data_;
   const bool *mask_;
   size_t pos_;
+
+  std::vector<size_t> pi_;
 };

@@ -30,5 +30,5 @@ if __name__ == '__main__':
     rng = rng_t(543)
     bootstrap(mm, view, rng)
     print 'training with dataset size', Y.shape[0], 'nfeatures', D
-    for i in xrange(2000):
-        gibbs_assign(mm, view, rng)
+    for i in xrange(100):
+        gibbs_assign(mm, view.permute(rng), rng)

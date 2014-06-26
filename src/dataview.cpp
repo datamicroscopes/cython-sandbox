@@ -1,4 +1,6 @@
 #include "dataview.hpp"
+#include "util.hpp"
+
 #include <cassert>
 #include <iostream>
 
@@ -34,15 +36,17 @@ row_major_dataview::row_major_dataview(
 row_accessor
 row_major_dataview::get() const
 {
-  const uint8_t *cursor = data_ + rowsize() * pos_;
-  const bool *mask_cursor = !mask_ ? nullptr : mask_ + types().size() * pos_;
+  const size_t actual_pos = pi_.empty() ? pos_ : pi_[pos_];
+  const uint8_t *cursor = data_ + rowsize() * actual_pos;
+  const bool *mask_cursor = !mask_ ? nullptr : mask_ + types().size() * actual_pos;
   return row_accessor(cursor, mask_cursor, &types(), &offsets());
 }
 
 size_t
 row_major_dataview::index() const
 {
-  return pos_;
+  const size_t actual_pos = pi_.empty() ? pos_ : pi_[pos_];
+  return actual_pos;
 }
 
 void
@@ -62,4 +66,10 @@ bool
 row_major_dataview::end() const
 {
   return pos_ == size();
+}
+
+void
+row_major_dataview::permute(rng_t &rng)
+{
+  util::permute(pi_, size(), rng);
 }

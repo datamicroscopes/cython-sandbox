@@ -1,6 +1,8 @@
 from libcpp.vector cimport vector
 from libcpp cimport bool
 from libc.stdint cimport uint8_t
+
+from random_fwd cimport rng_t
 cimport type_info as ti
 
 cdef extern from "dataview.hpp":
@@ -9,3 +11,5 @@ cdef extern from "dataview.hpp":
 
     cdef cppclass row_major_dataview(dataview):
         row_major_dataview(uint8_t *, bool *, size_t, vector[ti.runtime_type_info] &) except +
+        void permute(rng_t &) except +
+        void reset_permutation() 

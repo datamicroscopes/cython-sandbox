@@ -60,6 +60,11 @@ cdef class numpy_dataview(abstract_dataview):
             self._thisptr = new row_major_dataview( <uint8_t *> npd.data, <_bool *> npd_mask.data, n, ctypes)
         else:
             self._thisptr = new row_major_dataview( <uint8_t *> npd.data, NULL, n, ctypes)
+    def permute(self, rng_t rng):
+        (<row_major_dataview *>self._thisptr)[0].permute(rng._thisptr[0])
+        return self
+    def reset_permutation(self):
+        (<row_major_dataview *>self._thisptr)[0].reset_permutation()
 
 cdef hyperparam_bag_t _get_c_hyperparam(hp):
     cdef hyperparam_bag_t ret
