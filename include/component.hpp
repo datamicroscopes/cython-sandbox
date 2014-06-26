@@ -2,6 +2,7 @@
 
 #include "dataview.hpp"
 #include "random_fwd.hpp"
+#include "type_helper.hpp"
 
 #include <map>
 #include <functional>
@@ -25,6 +26,9 @@ public:
   virtual void remove_value(const hyperparam &hp, const row_accessor &value, rng_t &rng) = 0;
   virtual float score_value(const hyperparam &hp, const row_accessor &value, rng_t &rng) const = 0;
   virtual float score_data(const hyperparam &hp, rng_t &rng) const = 0;
+  virtual void sample_value(const hyperparam &hp, row_mutator &value, rng_t &rng) const = 0;
+
+  virtual runtime_type_info get_runtime_type_info() const = 0;
 
   // ugly hack for python
   typedef std::function<std::shared_ptr<hyperparam>(const hyperparam_bag_t &)> make_hyperparam_fn_t;
@@ -75,7 +79,7 @@ public:
   }
 
   float
-  score_value(const hyperparam &hp, const row_accessor &value, rng_t &rng) const
+  score_value(const hyperparam &hp, const row_accessor &value, rng_t &rng) const override
   {
     return repr_.score_value(
       static_cast<const distributions_hyperparam<T, Message> &>(hp).repr_,
@@ -84,11 +88,27 @@ public:
   }
 
   float
-  score_data(const hyperparam &hp, rng_t &rng) const
+  score_data(const hyperparam &hp, rng_t &rng) const override
   {
     return repr_.score_data(
       static_cast<const distributions_hyperparam<T, Message> &>(hp).repr_,
       rng);
+  }
+
+  void
+  sample_value(const hyperparam &hp, row_mutator &value, rng_t &rng) const override
+  {
+    typename T::Value sampled =
+      repr_.sample_value(
+          static_cast<const distributions_hyperparam<T, Message> &>(hp).repr_,
+          rng);
+    value.set< typename T::Value >(sampled);
+  }
+
+  runtime_type_info
+  get_runtime_type_info() const override
+  {
+    return _static_type_to_runtime_id< typename T::Value >::value;
   }
 
 private:

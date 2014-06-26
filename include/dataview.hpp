@@ -2,11 +2,13 @@
 
 #include <vector>
 #include <cassert>
+#include <cstring>
 
 #include "type_helper.hpp"
 #include "random_fwd.hpp"
 
 class row_accessor {
+  friend class row_mutator;
 public:
   row_accessor() : data_(), mask_(), types_(), offsets_(), pos_() {}
   row_accessor(const uint8_t *data,
@@ -50,11 +52,16 @@ public:
     seek(pos_ + 1);
   }
 
+  inline bool end() const { return pos_ == nfeatures(); }
+
   inline void
   reset()
   {
     seek(0);
   }
+
+protected:
+  const uint8_t *cursor() const { return cursor_; }
 
 private:
   const uint8_t *data_;
@@ -63,6 +70,72 @@ private:
   const std::vector<size_t> *offsets_;
 
   const uint8_t *cursor_;
+  size_t pos_;
+};
+
+class row_mutator {
+public:
+  row_mutator() : data_(), types_(), offsets_(), pos_() {}
+  row_mutator(uint8_t *data,
+              const std::vector<runtime_type_info> *types,
+              const std::vector<size_t> *offsets)
+    : data_(data), types_(types),
+      offsets_(offsets), cursor_(data), pos_()
+  {
+    assert(data);
+    assert(types->size() == offsets->size());
+  }
+
+  inline size_t tell() const { return pos_; }
+  inline size_t nfeatures() const { return types_->size(); }
+
+  inline void
+  seek(size_t pos)
+  {
+    assert(pos <= nfeatures());
+    if (pos < nfeatures())
+      cursor_ = data_ + (*offsets_)[pos];
+    else
+      cursor_ = nullptr;
+    pos_ = pos;
+  }
+
+  template <typename T>
+  void
+  set(const T& t)
+  {
+    assert(cursor_);
+    // XXX: implementing casting here
+    *reinterpret_cast<T *>(cursor_) = t;
+  }
+
+  void
+  set(const row_accessor &acc)
+  {
+    assert(cursor_);
+    memcpy(cursor_, acc.cursor(), runtime_type_traits::TypeSize((*types_)[pos_]));
+  }
+
+  inline void
+  bump()
+  {
+    seek(pos_ + 1);
+  }
+
+  inline bool end() const { return pos_ == nfeatures(); }
+
+  inline void
+  reset()
+  {
+    seek(0);
+  }
+
+private:
+  uint8_t *data_;
+  const std::vector<runtime_type_info> *types_;
+  const std::vector<size_t> *offsets_;
+
+  uint8_t *cursor_;
   size_t pos_;
 };
 

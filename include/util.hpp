@@ -57,4 +57,42 @@ struct util {
     }
   }
 
+  static std::uniform_real_distribution<float> Unif01_;
+
+  // copy from:
+  // https://github.com/forcedotcom/distributions/blob/master/distributions/util.py
+
+  static inline void
+  scores_to_probs(std::vector<float> &scores)
+  {
+    const float m = *std::max_element(scores.begin(), scores.end());
+    for (auto &s : scores)
+      s -= m;
+    for (auto &s : scores)
+      s = expf(s);
+    const float acc = std::accumulate(scores.begin(), scores.end(), 0.);
+    for (auto &s : scores)
+      s /= acc;
+  }
+
+  static inline size_t
+  sample_discrete_log(std::vector<float> &scores, rng_t &rng)
+  {
+    scores_to_probs(scores);
+    return sample_discrete(scores, rng);
+  }
+
+  static inline size_t
+  sample_discrete(const std::vector<float> &probs, rng_t &rng)
+  {
+    // assumes probs add up to 1
+    float dart = Unif01_(rng);
+    for (size_t i = 0; i < probs.size(); i++) {
+      dart -= probs[i];
+      if (dart <= 0.)
+        return i;
+    }
+    return probs.size() - 1;
+  }
+
 };

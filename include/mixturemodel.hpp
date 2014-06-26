@@ -60,6 +60,9 @@ public:
   std::pair<std::vector<size_t>, std::vector<float>> score_value(row_accessor &acc, rng_t &rng) const;
   float score_data(const std::vector<size_t> &features, const std::vector<size_t> &groups, rng_t &rng) const;
 
+  // XXX: we assume the caller has taken care to set the groups correctly!
+  void sample_post_pred(row_accessor &acc, row_mutator &mut, rng_t &rng) const;
+
   // random statistics
   inline size_t groups_created() const { return gcount_; }
   inline size_t groups_removed() const { return gremoved_; }

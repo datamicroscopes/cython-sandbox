@@ -127,3 +127,22 @@ mixturemodel_state::score_data(const vector<size_t> &features,
   }
   return sum;
 }
+
+void
+mixturemodel_state::sample_post_pred(row_accessor &acc,
+                                     row_mutator &mut,
+                                     rng_t &rng) const
+{
+  assert(acc.nfeatures() == mut.nfeatures());
+  auto scores = score_value(acc, rng);
+  const auto choice = scores.first[util::sample_discrete_log(scores.second, rng)];
+  const auto &gdata = groups_.at(choice).second;
+  acc.reset(); mut.reset();
+  for (size_t i = 0; !acc.end(); acc.bump(), mut.bump(), i++) {
+    if (!acc.ismasked()) {
+      mut.set(acc);
+      continue;
+    }
+    gdata[i]->sample_value(*hyperparams_[i], mut, rng);
+  }
+}

@@ -4,7 +4,12 @@ CXXFLAGS := -fPIC -g -Wall -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/i
 #CXXFLAGS := -fPIC -g -Wall -O3 -DNDEBUG -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
 LDFLAGS := -ldistributions_shared -L$(HOME)/distributions-bin/lib -Wl,-rpath,$(HOME)/distributions-bin/lib
 
-SRCFILES := src/dataview.cpp src/type_helper.cpp src/component.cpp src/kernel.cpp src/mixturemodel.cpp
+SRCFILES := src/dataview.cpp \
+	src/type_helper.cpp \
+	src/component.cpp \
+	src/kernel.cpp \
+	src/mixturemodel.cpp \
+	src/util.cpp
 OBJFILES := $(patsubst src/%.cpp, $(O)/%.o, $(SRCFILES))
 
 UNAME_S := $(shell uname -s)
