@@ -1,5 +1,7 @@
 #include "mixturemodel.hpp"
 #include "macros.hpp"
+#include "util.hpp"
+
 #include <iostream>
 
 using namespace std;
@@ -99,4 +101,29 @@ mixturemodel_state::score_value(row_accessor &acc, rng_t &rng) const
   for (auto &s : ret.second)
     s -= lgnorm;
   return ret;
+}
+
+float
+mixturemodel_state::score_data(const vector<size_t> &features,
+                               const vector<size_t> &groups,
+                               rng_t &rng) const
+{
+  // XXX: out of laziness, we copy
+  vector<size_t> fids(features);
+  if (fids.empty())
+    util::inplace_range(fids, hyperparams_.size());
+  vector<size_t> gids(groups);
+  if (gids.empty()) {
+    gids.reserve(groups_.size());
+    for (auto &g : groups_)
+      gids.push_back(g.first);
+  }
+
+  float sum = 0.;
+  for (auto g : gids) {
+    const auto &gdata = groups_.at(g);
+    for (auto f : fids)
+      sum += gdata.second[f]->score_data(*hyperparams_[f], rng);
+  }
+  return sum;
 }
