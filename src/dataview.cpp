@@ -9,12 +9,9 @@ using namespace std;
 dataview::dataview(size_t n, const vector<runtime_type_info> &types)
   : n_(n), types_(types), rowsize_()
 {
-  size_t acc = 0;
-  for (auto t : types) {
-    offsets_.push_back(acc);
-    acc += runtime_type_traits::TypeSize(t);
-  }
-  rowsize_ = acc;
+  const auto ret = runtime_type_traits::GetOffsetsAndSize(types);
+  offsets_ = ret.first;
+  rowsize_ = ret.second;
 }
 
 row_major_dataview::row_major_dataview(

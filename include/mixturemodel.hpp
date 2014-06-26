@@ -55,6 +55,14 @@ public:
   size_t create_group(rng_t &rng);
   void remove_group(size_t gid);
 
+  // XXX: helper function, move to outer mixturemodel once we
+  // abstract better
+  void ensure_k_empty_groups(size_t k, rng_t &rng);
+
+  // XXX: also doesn't belong here
+  std::vector< runtime_type_info >
+  get_runtime_type_info() const;
+
   void add_value(size_t gid, const dataview &view, rng_t &rng);
   size_t remove_value(const dataview &view, rng_t &rng);
   std::pair<std::vector<size_t>, std::vector<float>> score_value(row_accessor &acc, rng_t &rng) const;

@@ -18,5 +18,8 @@ if __name__ == '__main__':
     bootstrap(mm, view, rng)
     gibbs_assign(mm, view.permute(rng), rng)
 
+    y_new = ma.masked_array( np.array([(True, 30.0)], dtype=[('', np.bool), ('', np.float)]), mask=[(False, True)] )
+    print mm.sample_post_pred(y_new, rng)
+
     x1 = ma.masked_array( np.array([(True, False, True, True, True)], dtype=[('', np.bool)]*5), mask=[(False, False, True, True, True)] )
     view1 = numpy_dataview(x1)

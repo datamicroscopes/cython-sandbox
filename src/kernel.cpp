@@ -15,6 +15,7 @@ void
 gibbs::assign(mixturemodel_state &state, dataview &view, rng_t &rng)
 {
   // ensure 1 empty group
+  // note: this is more efficient than state.ensure_k_empty_groups(1, rng)
   size_t egid = 0;
   const size_t egsizeinit = state.emptygroups().size();
   if (!egsizeinit)
@@ -28,6 +29,7 @@ gibbs::assign(mixturemodel_state &state, dataview &view, rng_t &rng)
         state.remove_group(g);
     }
   }
+
   //cout << "empty group: " << egid << endl;
   for (view.reset(); !view.end(); view.next()) {
     const size_t gid = state.remove_value(view, rng);

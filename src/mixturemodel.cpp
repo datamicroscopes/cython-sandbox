@@ -33,6 +33,32 @@ mixturemodel_state::remove_group(size_t gid)
 }
 
 void
+mixturemodel_state::ensure_k_empty_groups(size_t k, rng_t &rng)
+{
+  // XXX: should allow for resampling
+  if (emptygroups().size() == k)
+    return;
+  // XXX: NOT EFFICIENT
+  vector<size_t> empty_groups(gempty_.begin(), gempty_.end());
+  for (auto egid : empty_groups)
+    remove_group(egid);
+  for (size_t i = 0; i < k; i++)
+    create_group(rng);
+  assert( emptygroups().size() == k );
+}
+
+vector<runtime_type_info>
+mixturemodel_state::get_runtime_type_info() const
+{
+  // XXX: move it somewhere else
+  DCHECK(emptygroups().size(), "stupid implementation limitation");
+  vector<runtime_type_info> ret;
+  for (const auto &px : groups_.begin()->second.second)
+    ret.push_back(px->get_runtime_type_info());
+  return ret;
+}
+
+void
 mixturemodel_state::add_value(size_t gid, const dataview &view, rng_t &rng)
 {
   assert(view.size() == assignments_.size());

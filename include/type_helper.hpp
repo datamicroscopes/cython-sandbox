@@ -1,7 +1,9 @@
 #pragma once
 
 #include "type_info.h"
+
 #include <vector>
+#include <utility>
 #include <iostream>
 
 template <typename T>
@@ -35,6 +37,20 @@ public:
   {
     return TypeSizes_[t];
   }
+
+  static inline std::pair< std::vector<size_t>, size_t >
+  GetOffsetsAndSize(const std::vector<runtime_type_info> &types)
+  {
+    std::vector<size_t> offsets;
+    offsets.reserve(types.size());
+    size_t acc = 0;
+    for (auto t : types) {
+      offsets.push_back(acc);
+      acc += TypeSize(t);
+    }
+    return std::make_pair( std::move(offsets), acc );
+  }
+
 private:
   static const size_t TypeSizes_[TYPE_INFO_NELEMS];
 };

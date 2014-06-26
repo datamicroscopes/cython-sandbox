@@ -95,4 +95,16 @@ struct util {
     return probs.size() - 1;
   }
 
+  static inline std::string
+  hexify(const uint8_t *buf, size_t n)
+  {
+    const char *table = "0123456789abcdef";
+    std::string res(n * 2, '0');
+    for (size_t i = 0; i < n; i++) {
+      res[i*2]   = table[buf[i] / 16];
+      res[i*2+1] = table[buf[i] % 16];
+    }
+    return res;
+  }
+
 };

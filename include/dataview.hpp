@@ -3,6 +3,7 @@
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include <iostream>
 
 #include "type_helper.hpp"
 #include "random_fwd.hpp"
