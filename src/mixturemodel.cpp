@@ -1,4 +1,5 @@
 #include "mixturemodel.hpp"
+#include "macros.hpp"
 #include <iostream>
 
 using namespace std;
@@ -44,8 +45,11 @@ mixturemodel_state::add_value(size_t gid, const dataview &view, rng_t &rng)
   }
   row_accessor acc = view.get();
   assert(acc.nfeatures() == it->second.second.size());
-  for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
+  for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump()) {
+    if (unlikely(acc.ismasked()))
+      continue;
     it->second.second[i]->add_value(*hyperparams_[i], acc, rng);
+  }
   assignments_[view.index()] = gid;
 }
 
@@ -62,8 +66,11 @@ mixturemodel_state::remove_value(const dataview &view, rng_t &rng)
     gempty_.insert(gid);
   row_accessor acc = view.get();
   assert(acc.nfeatures() == it->second.second.size());
-  for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
+  for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump()) {
+    if (unlikely(acc.ismasked()))
+      continue;
     it->second.second[i]->remove_value(*hyperparams_[i], acc, rng);
+  }
   assignments_[view.index()] = -1;
   return gid;
 }
@@ -79,8 +86,11 @@ mixturemodel_state::score_value(row_accessor &acc, rng_t &rng) const
   for (auto &group : groups_) {
     float sum = logf(group.second.first ? float(group.second.first) : empty_group_alpha);
     acc.reset();
-    for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump())
+    for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump()) {
+      if (unlikely(acc.ismasked()))
+        continue;
       sum += group.second.second[i]->score_value(*hyperparams_[i], acc, rng);
+    }
     ret.first.push_back(group.first);
     ret.second.push_back(sum);
     count += group.second.first;
