@@ -110,7 +110,11 @@ cdef class mixturemodel:
     def __dealloc__(self):
         del self._thisptr
 
-    def sample_post_pred(self, np.ndarray inp, rng_t rng):
+    def sample_post_pred(self, np.ndarray inp, rng_t rng, size=1):
+        ret = [self._sample_post_pred_one(inp, rng) for _ in xrange(size)]
+        return np.hstack(ret)
+
+    def _sample_post_pred_one(self, np.ndarray inp, rng_t rng):
         cdef np.ndarray inp_data = None
         cdef np.ndarray inp_mask = None
         cdef vector[ti.runtime_type_info] inp_ctypes
