@@ -9,6 +9,7 @@ from mixturemodel cimport mixturemodel_state
 from kernel cimport assign
 from kernel cimport bootstrap as _bootstrap
 
+import numpy as np
 cimport numpy as np
 cimport type_info as ti
 
