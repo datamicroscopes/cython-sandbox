@@ -6,3 +6,12 @@ cdef class factory:
 
 cdef class bb_factory(factory):
     cdef shared_ptr[model] new_cmodel(self)
+
+cdef class bnb_factory(factory):
+    cdef shared_ptr[model] new_cmodel(self)
+
+cdef class gp_factory(factory):
+    cdef shared_ptr[model] new_cmodel(self)
+
+cdef class nich_factory(factory):
+    cdef shared_ptr[model] new_cmodel(self)
