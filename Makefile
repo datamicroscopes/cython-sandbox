@@ -2,9 +2,9 @@ O := out
 TOP := $(shell echo $${PWD-`pwd`})
 CXXFLAGS := -fPIC -g -MD -Wall -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
 #CXXFLAGS := -fPIC -g -MD -Wall -O3 -DNDEBUG -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
-LDFLAGS := -ldistributions_shared -L$(HOME)/distributions-bin/lib -Wl,-rpath,$(HOME)/distributions-bin/lib
+LDFLAGS := -lprotobuf -ldistributions_shared -L$(HOME)/distributions-bin/lib -Wl,-rpath,$(HOME)/distributions-bin/lib
 
-SRCFILES := $(wildcard src/*.cpp src/common/*.cpp src/mixture/*.cpp src/kernels/*.cpp src/models/*.cpp) 
+SRCFILES := $(wildcard src/*.cpp src/io/*.cpp src/common/*.cpp src/mixture/*.cpp src/kernels/*.cpp src/models/*.cpp) 
 OBJFILES := $(patsubst src/%.cpp, $(O)/%.o, $(SRCFILES))
 
 UNAME_S := $(shell uname -s)
@@ -37,3 +37,9 @@ endif
 clean: 
 	rm -rf out/
 	find microscopes/ -name '*.cpp' -o -name '*.so' -type f -print0 | xargs -0 rm --
+
+.PHONY: protobuf
+protobuf:
+	mkdir -p src/io
+	protoc --cpp_out=include --python_out=. microscopes/io/schema.proto
+	mv include/microscopes/io/schema.pb.cc src/io/schema.pb.cpp

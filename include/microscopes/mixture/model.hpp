@@ -2,6 +2,7 @@
 
 #include <microscopes/models/base.hpp>
 #include <microscopes/common/typedefs.hpp>
+#include <microscopes/io/schema.pb.h>
 
 #include <cassert>
 #include <cmath>
@@ -10,6 +11,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <utility>
 
 namespace microscopes {
@@ -17,6 +19,8 @@ namespace mixture {
 
 class state {
 public:
+
+  typedef io::CRP message_type;
 
   state(size_t n, const std::vector<std::shared_ptr<models::model>> &models)
     : alpha_(),
@@ -32,14 +36,20 @@ public:
   common::hyperparam_bag_t
   get_hp() const
   {
-    // XXX: implement me
-    return "";
+    message_type m;
+    m.set_alpha(alpha_);
+    std::ostringstream out;
+    m.SerializeToOstream(&out);
+    return out.str();
   }
 
   void
   set_hp(const common::hyperparam_bag_t &hp)
   {
-    // XXX: implement me
+    std::istringstream inp(hp);
+    message_type m;
+    m.ParseFromIstream(&inp);
+    alpha_ = m.alpha();
   }
 
   common::hyperparam_bag_t

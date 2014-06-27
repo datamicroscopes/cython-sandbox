@@ -1,4 +1,5 @@
 import numpy as np
+from microscopes.io.schema_pb2 import CRP
 
 def get_np_type(tpe):
     if tpe == ti.TYPE_INFO_B:
@@ -27,6 +28,17 @@ cdef class state:
 
     def __dealloc__(self):
         del self._thisptr
+
+    def get_hp(self):
+        m = CRP()
+        raw = str(self._thisptr[0].get_hp())
+        m.ParseFromString(raw)
+        return {'alpha':m.alpha}
+
+    def set_hp(self, raw):
+        m = CRP()
+        m.alpha = float(raw['alpha'])
+        self._thisptr[0].set_hp(m.SerializeToString())
 
     def get_feature_hp(self, int i):
         raw = str(self._thisptr[0].get_feature_hp(i))
