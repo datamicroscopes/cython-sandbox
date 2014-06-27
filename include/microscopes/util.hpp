@@ -1,12 +1,11 @@
 #pragma once
 
-#include "dataview.hpp"
-#include "mixturemodel.hpp"
-#include "random_fwd.hpp"
+#include <microscopes/random_fwd.hpp>
 
 #include <iostream>
 #include <vector>
 #include <utility>
+#include <random>
 
 // pretty printer for std::pair<A, B>
 template <typename A, typename B>
@@ -33,6 +32,8 @@ operator<<(std::ostream &o, const std::vector<T, Alloc> &v)
   o << "]";
   return o;
 }
+
+namespace microscopes {
 
 struct util {
 
@@ -108,3 +109,5 @@ struct util {
   }
 
 };
+
+} // namespace microscopes

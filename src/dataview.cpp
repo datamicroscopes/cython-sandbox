@@ -1,10 +1,11 @@
-#include "dataview.hpp"
-#include "util.hpp"
+#include <microscopes/dataview.hpp>
+#include <microscopes/util.hpp>
 
 #include <cassert>
 #include <iostream>
 
 using namespace std;
+using namespace microscopes;
 
 dataview::dataview(size_t n, const vector<runtime_type_info> &types)
   : n_(n), types_(types), rowsize_()

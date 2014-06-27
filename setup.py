@@ -11,6 +11,10 @@ clang = False
 if sys.platform.lower().startswith('darwin'):
     clang = True
 
+from os.path import expanduser
+distributions_inc = expanduser("~/distributions/include")
+distributions_lib = expanduser("~/distributions-bin/lib")
+
 extra_compile_args = ['-std=c++0x']
 if clang:
     extra_compile_args.extend([
@@ -19,15 +23,25 @@ if clang:
         '-stdlib=libc++',
     ])
 
-from os.path import expanduser
-distributions_inc = expanduser("~/distributions/include")
+extra_link_args = [
+        '-L' + distributions_lib,
+        '-Wl,-rpath,' + distributions_lib
+    ]
+
+def make_extension(name):
+    return Extension(
+        "microscopes." + name,
+        sources=["microscopes/" + name + ".pyx"],
+        libraries=["microscopes", "protobuf", "distributions_shared"],
+        language="c++",
+        include_dirs=[numpy.get_include(), 'include', 'microscopes', distributions_inc],
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args)
 
 setup(
     cmdclass = {'build_ext': build_ext},
-    ext_modules = [Extension("microscopes.hodgepodge",
-                             sources=["microscopes/hodgepodge.pyx"],
-                             libraries=["microscopes"],
-                             language="c++",
-                             include_dirs=[numpy.get_include(), 'include', 'microscopes', distributions_inc],
-                             extra_compile_args=extra_compile_args)],
+    ext_modules = [
+        make_extension("hodgepodge"),
+        make_extension("_models"),
+    ],
 )

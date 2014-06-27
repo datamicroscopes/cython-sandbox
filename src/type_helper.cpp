@@ -1,4 +1,6 @@
-#include "type_helper.hpp"
+#include <microscopes/type_helper.hpp>
+
+using namespace microscopes;
 
 // order must match type_info.h
 // XXX: do some macro magic to make this easier

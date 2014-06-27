@@ -1,12 +1,14 @@
 #pragma once
 
+#include <microscopes/type_helper.hpp>
+#include <microscopes/random_fwd.hpp>
+
 #include <vector>
 #include <cassert>
 #include <cstring>
 #include <iostream>
 
-#include "type_helper.hpp"
-#include "random_fwd.hpp"
+namespace microscopes {
 
 class row_accessor {
   friend class row_mutator;
@@ -191,3 +193,5 @@ private:
 
   std::vector<size_t> pi_;
 };
+
+} // namespace microscopes

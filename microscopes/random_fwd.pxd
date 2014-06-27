@@ -3,5 +3,5 @@ cdef extern from "<random>" namespace "std":
         default_random_engine(int) except +
         void seed(int) except +
 
-cdef extern from "random_fwd.hpp":
+cdef extern from "microscopes/random_fwd.hpp" namespace "microscopes":
     ctypedef default_random_engine rng_t

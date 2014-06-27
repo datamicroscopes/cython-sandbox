@@ -1,10 +1,12 @@
 #pragma once
 
-#include "type_info.h"
+#include <microscopes/type_info.h>
 
 #include <vector>
 #include <utility>
 #include <iostream>
+
+namespace microscopes {
 
 template <typename T>
 struct _info { static const size_t size = sizeof(T); };
@@ -54,3 +56,5 @@ public:
 private:
   static const size_t TypeSizes_[TYPE_INFO_NELEMS];
 };
+
+} // namespace microscopes

@@ -1,16 +1,17 @@
 from libcpp.vector cimport vector
 from libcpp.utility cimport pair
-from libcpp cimport bool as _bool
+from libcpp cimport bool as cbool
 from libcpp.string cimport string
 from libc.stdint cimport uint8_t 
 from libc.stddef cimport size_t
 
 from dataview cimport dataview, row_major_dataview, row_accessor, row_mutator
-from component cimport hyperparam_bag_t
+from _models cimport hyperparam_bag_t, suffstats_bag_t, model, _c_model
 from random_fwd cimport rng_t as _rng_t
 from mixturemodel cimport mixturemodel_state
-from kernel cimport assign
-from kernel cimport bootstrap as _bootstrap
+from kernels.gibbs cimport assign as _gibbs_assign
+from kernels.bootstrap cimport likelihood as _bootstrap_likelihood
+from shared_ptr cimport shared_ptr
 from type_helper cimport GetOffsetsAndSize
 
 import numpy as np
@@ -72,12 +73,6 @@ cdef vector[ti.runtime_type_info] _get_c_types(np.ndarray npd):
         ctypes.push_back(_get_c_type(npd.dtype[i]))
     return ctypes
 
-cdef hyperparam_bag_t _get_c_hyperparam(hp):
-    cdef hyperparam_bag_t ret
-    for k, v in hp.iteritems():
-        ret[k] = float(v)
-    return ret
-
 cdef class numpy_dataview(abstract_dataview):
     cdef np.ndarray _npd
     def __cinit__(self, np.ndarray npd):
@@ -88,7 +83,7 @@ cdef class numpy_dataview(abstract_dataview):
         cdef np.ndarray npd_mask
         if hasattr(npd, 'mask'):
             npd_mask = np.ascontiguousarray(npd.mask)
-            self._thisptr = new row_major_dataview( <uint8_t *> npd.data, <_bool *> npd_mask.data, n, ctypes)
+            self._thisptr = new row_major_dataview( <uint8_t *> npd.data, <cbool *> npd_mask.data, n, ctypes)
         else:
             self._thisptr = new row_major_dataview( <uint8_t *> npd.data, NULL, n, ctypes)
     def permute(self, rng_t rng):
@@ -99,14 +94,11 @@ cdef class numpy_dataview(abstract_dataview):
 
 cdef class mixturemodel:
     cdef mixturemodel_state *_thisptr
-    def __cinit__(self, n, clusterhp, models, hps):
-        cdef vector[string] factories 
-        cdef vector[hyperparam_bag_t] hyperparams
-        for m in models:
-            factories.push_back(str(m))
-        for hp in hps:
-            hyperparams.push_back(_get_c_hyperparam(hp))
-        self._thisptr = new mixturemodel_state(n, _get_c_hyperparam(clusterhp), factories, hyperparams)
+    def __cinit__(self, n, list models):
+        cdef vector[shared_ptr[model]] cmodels
+        for py_m, c_m in models:
+            cmodels.push_back((<_c_model>c_m).new_cmodel())
+        self._thisptr = new mixturemodel_state(n, cmodels)
     def __dealloc__(self):
         del self._thisptr
 
@@ -135,7 +127,7 @@ cdef class mixturemodel:
         # XXX: can we stack allocate?
         cdef row_accessor *acc = new row_accessor( 
             <uint8_t *> inp_data.data, 
-            <_bool *> inp_mask.data if inp_mask is not None else NULL,
+            <cbool *> inp_mask.data if inp_mask is not None else NULL,
             &inp_ctypes,
             inp_offsets)
 
@@ -166,8 +158,8 @@ cdef class mixturemodel:
         del mut
         return out_npd
 
-def bootstrap(mixturemodel mm, abstract_dataview view, rng_t rng):
-    _bootstrap(mm._thisptr[0], view._thisptr[0], rng._thisptr[0])
+def bootstrap_likelihood(mixturemodel mm, abstract_dataview view, rng_t rng):
+    _bootstrap_likelihood(mm._thisptr[0], view._thisptr[0], rng._thisptr[0])
 
 def gibbs_assign(mixturemodel mm, abstract_dataview view, rng_t rng):
-    assign(mm._thisptr[0], view._thisptr[0], rng._thisptr[0])
+    _gibbs_assign(mm._thisptr[0], view._thisptr[0], rng._thisptr[0])

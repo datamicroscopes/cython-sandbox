@@ -1,15 +1,10 @@
 O := out
 TOP := $(shell echo $${PWD-`pwd`})
-CXXFLAGS := -fPIC -g -Wall -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
-#CXXFLAGS := -fPIC -g -Wall -O3 -DNDEBUG -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
+CXXFLAGS := -fPIC -g -MD -Wall -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
+#CXXFLAGS := -fPIC -g -MD -Wall -O3 -DNDEBUG -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
 LDFLAGS := -ldistributions_shared -L$(HOME)/distributions-bin/lib -Wl,-rpath,$(HOME)/distributions-bin/lib
 
-SRCFILES := src/dataview.cpp \
-	src/type_helper.cpp \
-	src/component.cpp \
-	src/kernel.cpp \
-	src/mixturemodel.cpp \
-	src/util.cpp
+SRCFILES := $(wildcard src/*.cpp) 
 OBJFILES := $(patsubst src/%.cpp, $(O)/%.o, $(SRCFILES))
 
 UNAME_S := $(shell uname -s)
@@ -23,10 +18,6 @@ endif
 
 all: $(TARGETS)
 
-.PHONY: clean
-clean: 
-	rm -rf out/ microscopes/hodgepodge.{cpp,so}
-
 $(O)/%.o: src/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -36,3 +27,12 @@ $(O)/libmicroscopes.so: $(OBJFILES)
 
 $(O)/libmicroscopes.dylib: $(OBJFILES)
 	g++ -dynamiclib -o $(O)/libmicroscopes.dylib $(OBJFILES) $(LDFLAGS)
+
+DEPFILES := $(wildcard out/*.d)
+ifneq ($(DEPFILES),)
+-include $(DEPFILES)
+endif
+
+.PHONY: clean
+clean: 
+	rm -rf out/ microscopes/{hodgepodge,_models}.{cpp,so}

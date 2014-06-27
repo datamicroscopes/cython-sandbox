@@ -1,4 +1,4 @@
-cdef extern from "type_info.h":
+cdef extern from "microscopes/type_info.h":
     enum _runtime_type_info:
        TYPE_INFO_B
        TYPE_INFO_I8

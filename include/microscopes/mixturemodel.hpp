@@ -1,7 +1,7 @@
 #pragma once
 
-#include "component.hpp"
-#include "macros.hpp"
+#include <microscopes/macros.hpp>
+#include <microscopes/models.hpp>
 
 #include <cassert>
 #include <cmath>
@@ -12,27 +12,45 @@
 #include <memory>
 #include <utility>
 
+namespace microscopes {
+
 class mixturemodel_state {
 public:
 
-  // make construction from python easier!
-  mixturemodel_state(
-      size_t n,
-      const hyperparam_bag_t &clusterhp,
-      const std::vector< std::string > &factorynames,
-      const std::vector< hyperparam_bag_t > &bags)
-    : alpha_(clusterhp.at("alpha")),
+  mixturemodel_state(size_t n, const std::vector<std::shared_ptr<model>> &models)
+    : alpha_(),
       gcount_(),
       gremoved_(),
-      assignments_(n, -1)
+      gempty_(),
+      assignments_(n, -1),
+      models_(models),
+      groups_()
   {
-    DCHECK(factorynames.size() == bags.size(), "size discrepancy");
-    for (size_t i = 0; i < factorynames.size(); i++) {
-      const auto &name = factorynames[i];
-      const auto fns = component::metafactory(name);
-      hyperparams_.emplace_back(fns.first(bags[i]));
-      factories_.emplace_back(fns.second);
-    }
+  }
+
+  hyperparam_bag_t
+  get_hp() const
+  {
+    // XXX: implement me
+    return "";
+  }
+
+  void
+  set_hp(const hyperparam_bag_t &hp)
+  {
+    // XXX: implement me
+  }
+
+  hyperparam_bag_t
+  get_feature_hp(size_t i) const
+  {
+    return models_[i]->get_hp();
+  }
+
+  void
+  set_feature_hp(size_t i, const hyperparam_bag_t &hp)
+  {
+    models_[i]->set_hp(hp);
   }
 
   inline const std::set<size_t> &
@@ -81,10 +99,8 @@ private:
   size_t gremoved_;
   std::set<size_t> gempty_;
   std::vector<ssize_t> assignments_;
-  std::vector<std::shared_ptr<hyperparam>> hyperparams_;
-  std::vector<component::make_component_fn_t> factories_;
-  std::map<size_t,
-    std::pair<
-      size_t,
-      std::vector<std::shared_ptr<component>>>> groups_;
+  std::vector<std::shared_ptr<model>> models_;
+  std::map<size_t, std::pair<size_t, std::vector<std::shared_ptr<feature_group>>>> groups_;
 };
+
+} // namespace microscopes

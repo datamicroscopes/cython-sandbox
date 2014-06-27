@@ -1,18 +1,19 @@
-#include "mixturemodel.hpp"
-#include "macros.hpp"
-#include "util.hpp"
+#include <microscopes/mixturemodel.hpp>
+#include <microscopes/macros.hpp>
+#include <microscopes/util.hpp>
 
 #include <iostream>
 
 using namespace std;
+using namespace microscopes;
 
 size_t
 mixturemodel_state::create_group(rng_t &rng)
 {
-  vector<shared_ptr<component>> gdata;
-  gdata.reserve(factories_.size());
-  for (size_t i = 0; i < factories_.size(); i++)
-    gdata.emplace_back(factories_[i](*hyperparams_[i], rng));
+  vector<shared_ptr<feature_group>> gdata;
+  gdata.reserve(models_.size());
+  for (auto &m : models_)
+    gdata.emplace_back(m->create_feature_group(rng));
   const size_t gid = gcount_++;
   groups_[gid] = move(make_pair(0, move(gdata)));
   assert(!gempty_.count(gid));
@@ -50,11 +51,10 @@ mixturemodel_state::ensure_k_empty_groups(size_t k, rng_t &rng)
 vector<runtime_type_info>
 mixturemodel_state::get_runtime_type_info() const
 {
-  // XXX: move it somewhere else
-  DCHECK(emptygroups().size(), "stupid implementation limitation");
   vector<runtime_type_info> ret;
-  for (const auto &px : groups_.begin()->second.second)
-    ret.push_back(px->get_runtime_type_info());
+  ret.reserve(models_.size());
+  for (const auto &m : models_)
+    ret.push_back(m->get_runtime_type_info());
   return ret;
 }
 
@@ -76,7 +76,7 @@ mixturemodel_state::add_value(size_t gid, const dataview &view, rng_t &rng)
   for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump()) {
     if (unlikely(acc.ismasked()))
       continue;
-    it->second.second[i]->add_value(*hyperparams_[i], acc, rng);
+    it->second.second[i]->add_value(*models_[i], acc, rng);
   }
   assignments_[view.index()] = gid;
 }
@@ -97,7 +97,7 @@ mixturemodel_state::remove_value(const dataview &view, rng_t &rng)
   for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump()) {
     if (unlikely(acc.ismasked()))
       continue;
-    it->second.second[i]->remove_value(*hyperparams_[i], acc, rng);
+    it->second.second[i]->remove_value(*models_[i], acc, rng);
   }
   assignments_[view.index()] = -1;
   return gid;
@@ -117,7 +117,7 @@ mixturemodel_state::score_value(row_accessor &acc, rng_t &rng) const
     for (size_t i = 0; i < acc.nfeatures(); i++, acc.bump()) {
       if (unlikely(acc.ismasked()))
         continue;
-      sum += group.second.second[i]->score_value(*hyperparams_[i], acc, rng);
+      sum += group.second.second[i]->score_value(*models_[i], acc, rng);
     }
     ret.first.push_back(group.first);
     ret.second.push_back(sum);
@@ -137,7 +137,7 @@ mixturemodel_state::score_data(const vector<size_t> &features,
   // XXX: out of laziness, we copy
   vector<size_t> fids(features);
   if (fids.empty())
-    util::inplace_range(fids, hyperparams_.size());
+    util::inplace_range(fids, models_.size());
   vector<size_t> gids(groups);
   if (gids.empty()) {
     gids.reserve(groups_.size());
@@ -149,7 +149,7 @@ mixturemodel_state::score_data(const vector<size_t> &features,
   for (auto g : gids) {
     const auto &gdata = groups_.at(g);
     for (auto f : fids)
-      sum += gdata.second[f]->score_data(*hyperparams_[f], rng);
+      sum += gdata.second[f]->score_data(*models_[f], rng);
   }
   return sum;
 }
@@ -169,6 +169,6 @@ mixturemodel_state::sample_post_pred(row_accessor &acc,
       mut.set(acc);
       continue;
     }
-    gdata[i]->sample_value(*hyperparams_[i], mut, rng);
+    gdata[i]->sample_value(*models_[i], mut, rng);
   }
 }
