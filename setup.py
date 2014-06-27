@@ -30,19 +30,14 @@ extra_link_args = [
         '-Wl,-rpath,' + distributions_lib
     ]
 
-non_exported_module_sources = [
-    #'microscopes/cxx/_models.pyx',
-    #'microscopes/cxx/common/_dataview.pyx',
-    #'microscopes/cxx/common/_rng.pyx',
-    #'microscopes/cxx/mixture/_model.pyx',
-]
+extra_sources = []
 
 def make_extension(name):
     name = ['microscopes'] + name
     module_name = '.'.join(name)
     module_source = '/'.join(name) + '.pyx'
     module_pxd = '/'.join(name) + '.pxd'
-    return _make_extension(module_name, [module_source] + non_exported_module_sources)
+    return _make_extension(module_name, [module_source] + extra_sources)
 
 def _make_extension(name, sources):
     return Extension(
@@ -63,9 +58,8 @@ extensions = cythonize([
         make_extension(['cxx', 'common', '_rng']),
         make_extension(['cxx', 'mixture', 'model']),
         make_extension(['cxx', 'mixture', '_model']),
+        make_extension(['cxx', 'kernels', 'bootstrap']),
+        make_extension(['cxx', 'kernels', 'gibbs']),
     ])
 
-setup(
-    #cmdclass = {'build_ext': build_ext},
-    ext_modules = extensions,
-)
+setup(ext_modules = extensions)
