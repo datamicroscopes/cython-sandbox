@@ -94,13 +94,25 @@ cdef class numpy_dataview(abstract_dataview):
 
 cdef class mixturemodel:
     cdef mixturemodel_state *_thisptr
+    cdef list _models
+
     def __cinit__(self, n, list models):
+        self._models = models
         cdef vector[shared_ptr[model]] cmodels
         for py_m, c_m in models:
             cmodels.push_back((<_c_model>c_m).new_cmodel())
         self._thisptr = new mixturemodel_state(n, cmodels)
+
     def __dealloc__(self):
         del self._thisptr
+
+    def get_feature_hp(self, int i):
+        raw = str(self._thisptr[0].get_feature_hp(i))
+        return self._models[i][0].shared_bytes_to_dict(raw)
+
+    def set_feature_hp(self, int i, dict d):
+        cdef hyperparam_bag_t raw = self._models[i][0].shared_dict_to_bytes(d) 
+        self._thisptr[0].set_feature_hp(i, raw)
 
     def sample_post_pred(self, np.ndarray inp, rng_t rng, size=1):
         ret = [self._sample_post_pred_one(inp, rng) for _ in xrange(size)]
