@@ -35,4 +35,5 @@ endif
 
 .PHONY: clean
 clean: 
-	rm -rf out/ microscopes/{hodgepodge,_models}.{cpp,so}
+	rm -rf out/
+	find microscopes/ -name '*.cpp' -o -name '*.so' -type f -print0 | xargs -0 rm --
