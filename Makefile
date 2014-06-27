@@ -4,7 +4,7 @@ CXXFLAGS := -fPIC -g -MD -Wall -std=c++0x -I$(TOP)/include -I$(HOME)/distributio
 #CXXFLAGS := -fPIC -g -MD -Wall -O3 -DNDEBUG -std=c++0x -I$(TOP)/include -I$(HOME)/distributions/include
 LDFLAGS := -ldistributions_shared -L$(HOME)/distributions-bin/lib -Wl,-rpath,$(HOME)/distributions-bin/lib
 
-SRCFILES := $(wildcard src/*.cpp) 
+SRCFILES := $(wildcard src/*.cpp src/common/*.cpp src/mixture/*.cpp src/kernels/*.cpp src/models/*.cpp) 
 OBJFILES := $(patsubst src/%.cpp, $(O)/%.o, $(SRCFILES))
 
 UNAME_S := $(shell uname -s)
@@ -28,7 +28,7 @@ $(O)/libmicroscopes.so: $(OBJFILES)
 $(O)/libmicroscopes.dylib: $(OBJFILES)
 	g++ -dynamiclib -o $(O)/libmicroscopes.dylib $(OBJFILES) $(LDFLAGS)
 
-DEPFILES := $(wildcard out/*.d)
+DEPFILES := $(wildcard out/*.d out/common/*.d out/mixture/*.d out/models/*.d)
 ifneq ($(DEPFILES),)
 -include $(DEPFILES)
 endif
