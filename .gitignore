@@ -3,5 +3,4 @@
 *.so
 *.pyc
 /out
-/microscopes/hodgepodge.cpp
-/microscopes/_models.cpp
+microscopes/**/*.cpp
